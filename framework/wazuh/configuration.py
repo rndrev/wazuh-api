@@ -348,6 +348,7 @@ def _rootkit_trojans2json(filepath):
 
     return data
 
+
 def _json2xml(input_json, nest_level=0):
     """
     Converts an input json in XML
@@ -373,6 +374,69 @@ def _json2xml(input_json, nest_level=0):
         else:
             xml += "{}</{}>\n".format(input_json[key],key)
     return xml
+
+
+def _json_conf_2_xml_conf(input_conf):
+    """
+    An input conf JSON will look like this:
+    [
+        {
+            "config": {
+                "localfile": [{
+                    "log_format": "syslog",
+                    "location": "/var/log/my.log"
+                ]},
+            },
+            "filters": {
+                "os": "Linux",
+                "name": "ubuntu"
+            }
+        },
+        {
+            "config": {
+                "localfile": [{
+                    "log_format": "syslog",
+                    "location": "/var/log/my.log"
+                ]},
+            },
+            "filters": {
+                "os": "Windows",
+            }
+        }
+    ]
+
+    The resulting XML output must be 
+
+    <agent_config os="Linux" name="ubuntu">
+        <localfile>
+            <location>/var/log/my.log</location>
+            <log_format>syslog</log_format>
+        </localfile>
+    </agent_config>
+    <agent_config os="Windows">
+        <localfile>
+            <location>/var/log/my.log</location>
+            <log_format>syslog</log_format>
+        </localfile>
+    </agent_config>
+    """
+    def create_agent_conf(conf):
+        xml = "<agent_config"
+        for filtrer_key in conf['filters'].keys():
+            xml += ' {}="{}"'.format(filtrer_key, conf['filters'][filtrer_key])
+        xml += ">\n"
+        xml += json2xml(conf['config'], 1)
+        xml += "</agent_config>\n"
+        return xml
+
+    xml = ""
+    if isinstance(input_conf, list): # more than one agent_conf with diff filters
+        for conf in input_conf:
+            xml += create_agent_conf(conf)
+    else:
+        xml += create_agent_conf(input_conf)
+    return xml
+
 
 # Main functions
 def get_ossec_conf(section=None, field=None):
