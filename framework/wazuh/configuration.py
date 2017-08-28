@@ -10,6 +10,7 @@ from wazuh.exception import WazuhException
 from wazuh.agent import Agent
 from wazuh import common
 from wazuh.utils import cut_array
+import json
 
 # Aux functions
 
@@ -347,6 +348,31 @@ def _rootkit_trojans2json(filepath):
 
     return data
 
+def _json2xml(input_json, nest_level=0):
+    """
+    Converts an input json in XML
+
+    input_json: JSON format object (created with json.loads)
+
+    return: xml format string.
+    """
+    nest = '\t'*nest_level
+    xml = ""
+    for key in input_json.keys():
+        # if k has more subclasses
+        xml += nest + "<{}>".format(key)
+        if isinstance(input_json[key], dict):
+            xml += "\n"
+            xml += json2xml(input_json[key], nest_level+1)
+            xml += nest + "</{}>\n".format(key)
+        elif isinstance(input_json[key], list):
+            for dic in input_json[key]:
+                xml += "\n"
+                xml += json2xml(dic, nest_level+1)
+                xml += nest + "</{}>\n".format(key)
+        else:
+            xml += "{}</{}>\n".format(input_json[key],key)
+    return xml
 
 # Main functions
 def get_ossec_conf(section=None, field=None):
