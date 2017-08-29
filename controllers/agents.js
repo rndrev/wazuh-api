@@ -917,5 +917,32 @@ router.post('/insert', function(req, res) {
         res_h.bad_request(req, res, 604, "Missing fields. Mandatory fields: id, name, ip, key");
 })
 
+/**
+ * @api {post} /agents/groups/configuration Modify group configuration
+ * @apiName ModifyAgentGroupConfiguration
+ * @apiGroup Groups
+ *
+ * @apiParam {String} group_id Group ID.
+ * @apiParam new_conf A list of dictionaries containing the agent_config(s) to add/modify
+ *
+ * @apiDescription Modifies the group configuration (agent.conf).
+ *
+ * @apiExample {curl} Example usage:
+ *     curl -u foo:bar -k -X POST -d '{"group_id": "webserver", "new_conf": [{"config": {"rootcheck": [{"check_unixaudit": "yes"}]}, "filters": {"os": "Linux"}}]}' -H 'Content-Type:application/json' "https://127.0.0.1:55000/agents/groups/configuration?pretty"
+ *
+ */
+router.post('/groups/configuration', function(req, res) {
+    logger.debug(req.connection.remoteAddress + " POST /agents/groups/configuration");
+
+    var data_request = {'function': 'POST/agents/groups/configuration', 'arguments': {}};
+
+    // if (!filter.check(req.body, {'group_id':'names'}, req, res))  // Filter with error
+    //     return;
+
+    data_request['arguments']['group_id'] = req.body.group_id;
+    data_request['arguments']['new_conf'] = req.body.new_conf;
+
+    execute.exec(python_bin, [wazuh_control], data_request, function (data) { res_h.send(req, res, data); });
+})
 
 module.exports = router;
