@@ -376,47 +376,7 @@ def _json2xml(input_json, nest_level=0):
 
 def _json_conf_2_xml_conf(input_conf):
     """
-    An input conf JSON will look like this:
-    [
-        {
-            "config": {
-                "localfile": [{
-                    "log_format": "syslog",
-                    "location": "/var/log/my.log"
-                ]},
-            },
-            "filters": {
-                "os": "Linux",
-                "name": "ubuntu"
-            }
-        },
-        {
-            "config": {
-                "localfile": [{
-                    "log_format": "syslog",
-                    "location": "/var/log/my.log"
-                ]},
-            },
-            "filters": {
-                "os": "Windows",
-            }
-        }
-    ]
-
-    The resulting XML output must be 
-
-    <agent_config os="Linux" name="ubuntu">
-        <localfile>
-            <location>/var/log/my.log</location>
-            <log_format>syslog</log_format>
-        </localfile>
-    </agent_config>
-    <agent_config os="Windows">
-        <localfile>
-            <location>/var/log/my.log</location>
-            <log_format>syslog</log_format>
-        </localfile>
-    </agent_config>
+    Turns a JSON config file into a XML config file
     """
     def create_agent_conf(conf):
         xml = "<agent_config"
@@ -436,7 +396,7 @@ def _json_conf_2_xml_conf(input_conf):
     return xml
 
 
-def _modify_agent_json_conf(new_conf, group_id=None):
+def _modify_agent_json_conf(new_conf, group_id=None, filename=None):
     """
     Gets actual agent.conf in JSON format and adds the new_conf to that JSON
     """
@@ -444,7 +404,7 @@ def _modify_agent_json_conf(new_conf, group_id=None):
         raise WazuhException(1307, "New agent configuration must be a list")
 
     # First, get the current configuration
-    current_conf = get_agent_conf(group_id=group_id)['items']
+    current_conf = get_agent_conf(group_id=group_id, filename=filename)['items']
     # next, iterate through new configuration
     for conf in new_conf:
         # search if there's a configuration with the filters of conf
@@ -590,3 +550,37 @@ def get_file_conf(filename, group_id=None, type_conf=None):
             data = _rcl2json(file_path)
 
     return data
+
+def modify_conf_file(new_conf, group_id=None, filename=None):
+    """
+    Modifies the agent.conf of a group
+
+    :return: a confirmation message and an error code
+    """
+    if group_id:
+        if not Agent.group_exists(group_id):
+            raise WazuhException(1710, group_id)
+
+        agent_conf = "{0}/{1}".format(common.shared_path, group_id)
+
+    if filename:
+        agent_conf_name = filename
+    else:
+        agent_conf_name = 'agent.conf'
+
+    agent_conf += "/{0}".format(agent_conf_name)
+
+    if not os_path.exists(agent_conf):
+        raise WazuhException(1006, agent_conf)
+
+    updated_json_conf = _modify_agent_json_conf(new_conf=new_conf, group_id=group_id, filename=filename)
+    updated_xml_conf  = _json_conf_2_xml_conf(updated_json_conf)
+    try:
+        # write new configuration to the agent_conf file
+        with open(agent_conf, 'w') as f:
+            f.write(updated_xml_conf)
+
+    except:
+        raise WazuhException(1101)
+
+    return {msg: 'Pushed configuration'}
