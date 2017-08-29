@@ -10,7 +10,6 @@ from wazuh.exception import WazuhException
 from wazuh.agent import Agent
 from wazuh import common
 from wazuh.utils import cut_array
-import json
 
 # Aux functions
 
@@ -318,7 +317,6 @@ def _rootkit_files2json(filepath):
 
     return data
 
-
 def _rootkit_trojans2json(filepath):
     """
     Returns the rootkit trojans file as dictionary.
@@ -349,7 +347,7 @@ def _rootkit_trojans2json(filepath):
     return data
 
 
-def _json2xml(input_json, nest_level=0):
+def json2xml(input_json, nest_level=0):
     """
     Converts an input json in XML
 
@@ -376,7 +374,7 @@ def _json2xml(input_json, nest_level=0):
     return xml
 
 
-def _json_conf_2_xml_conf(input_conf):
+def json_conf_2_xml_conf(input_conf):
     """
     An input conf JSON will look like this:
     [
@@ -436,6 +434,32 @@ def _json_conf_2_xml_conf(input_conf):
     else:
         xml += create_agent_conf(input_conf)
     return xml
+
+
+def modify_agent_conf(new_conf, group_id=None):
+    """
+    Gets actual agent.conf in JSON format and adds the new_conf to that JSON
+    """
+    if not isinstance(new_conf, list):
+        raise WazuhException(1307, "New agent configuration must be a list")
+
+    # First, get the current configuration
+    current_conf = get_agent_conf(group_id=group_id)['items']
+    # next, iterate through new configuration
+    for conf in new_conf:
+        # search if there's a configuration with the filters of conf
+        current_conf_filters = list(filter(lambda x: x['filters'] == conf['filters'], current_conf))
+        if current_conf_filters != []:
+            # if there's a configuration with those filters, add the new configuration to that one
+            if len(current_conf_filters) > 1:
+                # there can't be more than one conf with the same filters
+                raise WazuhException(1100, "There are multiple agent_config with same filters")
+
+            current_conf[current_conf.index(current_conf_filters[0])]['config'].update(conf['config'])
+        else:
+            current_conf.append(conf)
+
+    return current_conf
 
 
 # Main functions
