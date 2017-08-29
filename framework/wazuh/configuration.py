@@ -347,7 +347,7 @@ def _rootkit_trojans2json(filepath):
     return data
 
 
-def json2xml(input_json, nest_level=0):
+def _json2xml(input_json, nest_level=0):
     """
     Converts an input json in XML
 
@@ -374,7 +374,7 @@ def json2xml(input_json, nest_level=0):
     return xml
 
 
-def json_conf_2_xml_conf(input_conf):
+def _json_conf_2_xml_conf(input_conf):
     """
     An input conf JSON will look like this:
     [
@@ -436,7 +436,7 @@ def json_conf_2_xml_conf(input_conf):
     return xml
 
 
-def modify_agent_conf(new_conf, group_id=None):
+def _modify_agent_json_conf(new_conf, group_id=None):
     """
     Gets actual agent.conf in JSON format and adds the new_conf to that JSON
     """
