@@ -186,6 +186,7 @@ if __name__ == "__main__":
             'PUT/agents/groups/:group_id': Agent.create_group,
             'DELETE/agents/groups/:group_id':Agent.remove_group,
             'DELETE/agents/:agent_id/group':Agent.unset_group,
+            'POST/agents/groups/configuration': configuration.modify_conf_file,
 
             '/decoders': Decoder.get_decoders,
             '/decoders/files': Decoder.get_decoders_files,
