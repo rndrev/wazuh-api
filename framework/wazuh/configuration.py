@@ -362,12 +362,12 @@ def _json2xml(input_json, nest_level=0):
         xml += nest + "<{}>".format(key)
         if isinstance(input_json[key], dict):
             xml += "\n"
-            xml += json2xml(input_json[key], nest_level+1)
+            xml += _json2xml(input_json[key], nest_level+1)
             xml += nest + "</{}>\n".format(key)
         elif isinstance(input_json[key], list):
             for dic in input_json[key]:
                 xml += "\n"
-                xml += json2xml(dic, nest_level+1)
+                xml += _json2xml(dic, nest_level+1)
                 xml += nest + "</{}>\n".format(key)
         else:
             xml += "{}</{}>\n".format(input_json[key],key)
@@ -383,7 +383,7 @@ def _json_conf_2_xml_conf(input_conf):
         for filtrer_key in conf['filters'].keys():
             xml += ' {}="{}"'.format(filtrer_key, conf['filters'][filtrer_key])
         xml += ">\n"
-        xml += json2xml(conf['config'], 1)
+        xml += _json2xml(conf['config'], 1)
         xml += "</agent_config>\n"
         return xml
 
@@ -583,4 +583,4 @@ def modify_conf_file(new_conf, group_id=None, filename=None):
     except:
         raise WazuhException(1101)
 
-    return {msg: 'Pushed configuration'}
+    return {'msg': 'Pushed configuration'}
