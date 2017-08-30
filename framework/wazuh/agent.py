@@ -185,6 +185,20 @@ class Agent:
         if no_result:
             raise WazuhException(1701, self.id)
 
+    def _load_info_from_agent_db(self, table, select):
+        db_agent = glob('{0}/{1}-*.db'.format(common.database_path_agents, self.id))
+
+        if not db_agent:
+            raise WazuhException(1600)
+
+        conn = Connection(db_agent[0])
+        conn.execute("SELECT {0} FROM {1}".format(','.join(select), table))
+        db_response = conn.fetch()
+
+        data = {select_field: str(res_value) for res_value, select_field in zip(db_response, select)}
+
+        return data
+
     def get_basic_information(self):
         """
         Gets public attributes of existing agent.
