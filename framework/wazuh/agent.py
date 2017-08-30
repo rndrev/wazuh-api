@@ -594,6 +594,16 @@ class Agent:
         return Agent(agent_id)._load_info_from_agent_db(table='osinfo', select=select)
 
     @staticmethod
+    def get_hardware(agent_id, offset=0, limit=common.database_limit):
+        """
+        Get info about an agent's OS
+        """
+        select = ['board_serial', 'cpu_name', 'cpu_cores', 'cpu_mhz', 
+                  'ram_total', 'ram_free']
+
+        return Agent(agent_id)._load_info_from_agent_db(table='hwinfo', select=select)
+
+    @staticmethod
     def get_agents_overview(status="all", os_platform="all", os_version="all", offset=0, limit=common.database_limit, sort=None, search=None):
         """
         Gets a list of available agents with basic attributes.
