@@ -579,7 +579,9 @@ class Agent:
             raise WazuhException(1600)
 
         conn = Connection(db_global[0])
-        conn.execute("SELECT os_name FROM agent WHERE (id = {0})".format(agent_id))
+        query = "SELECT os_name FROM agent WHERE id = :id"
+        request = {'id': agent_id}
+        conn.execute(query, request)
         os_name = str(conn.fetch()[0])
 
         if 'Windows' in os_name:
