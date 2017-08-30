@@ -167,6 +167,7 @@ if __name__ == "__main__":
             '/agents/outdated': Agent.get_outdated_agents,
             '/agents/:agent_id/upgrade_result': Agent.get_upgrade_result,
             '/agents/:agent_id/os': Agent.get_os,
+            '/agents/:agent_id/hardware': Agent.get_hardware,
             'PUT/agents/:agent_id/upgrade': Agent.upgrade_agent,
             'PUT/agents/:agent_id/upgrade_custom': Agent.upgrade_agent_custom,
             'PUT/agents/:agent_id/restart': Agent.restart_agents,

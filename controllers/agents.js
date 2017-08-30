@@ -478,6 +478,32 @@ router.get('/:agent_id/os', function(req, res) {
 })
 
 /**
+ * @api {get} /agents/:agent_id/hardware Get hardware info
+ * @apiName GetOs
+ * @apiGroup Os
+ *
+ * @apiParam {Number} agent_id Agent ID.
+ *
+ * @apiDescription Returns the agent's hardware info
+ *
+ * @apiExample {curl} Example usage*:
+ *     curl -u foo:bar -k -X GET "https://127.0.0.1:55000/agents/003/hardware?pretty"
+ *
+ */
+router.get('/:agent_id/hardware', function(req, res) {
+    logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/hardware");
+
+    var data_request = {'function': '/agents/:agent_id/hardware', 'arguments': {}};
+
+    if (!filter.check(req.params, {'agent_id':'numbers'}, req, res))  // Filter with error
+        return;
+
+    data_request['arguments']['agent_id'] = req.params.agent_id;
+
+    execute.exec(python_bin, [wazuh_control], data_request, function (data) { res_h.send(req, res, data); });
+})
+
+/**
  * @api {put} /agents/restart Restart all agents
  * @apiName PutAgentsRestart
  * @apiGroup Restart
