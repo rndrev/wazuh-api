@@ -569,6 +569,29 @@ class Agent:
         self.id = agent_id
 
     @staticmethod
+    def get_os(agent_id, offset=0, limit=common.database_limit):
+        """
+        Get info about an agent's OS
+        """
+        # The osinfo fields in database are different in Windows and Linux
+        db_global = glob(common.database_path_global)
+        if not db_global:
+            raise WazuhException(1600)
+
+        conn = Connection(db_global[0])
+        conn.execute("SELECT os_name FROM agent WHERE (id = {0})".format(agent_id))
+        os_name = str(conn.fetch()[0])
+
+        if 'Windows' in os_name:
+            select = ['os_name', 'os_major', 'os_minor', 'os_build', 
+                      'os_version', 'nodename', 'machine']
+        else:
+            select = ['os_name', 'os_version', 'nodename', 'machine', 
+                      'os_platform', 'sysname', 'release', 'version']
+
+        return Agent(agent_id)._load_info_from_agent_db(table='osinfo', select=select)
+
+    @staticmethod
     def get_agents_overview(status="all", os_platform="all", os_version="all", offset=0, limit=common.database_limit, sort=None, search=None):
         """
         Gets a list of available agents with basic attributes.
