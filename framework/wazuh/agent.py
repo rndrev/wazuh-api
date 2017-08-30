@@ -187,7 +187,7 @@ class Agent:
 
     def _load_info_from_agent_db(self, table, select):
         db_agent = glob('{0}/{1}-*.db'.format(common.database_path_agents, self.id))
-
+        
         if not db_agent:
             raise WazuhException(1600)
 
@@ -195,7 +195,11 @@ class Agent:
         conn.execute("SELECT {0} FROM {1}".format(','.join(select), table))
         db_response = conn.fetch()
 
-        data = {select_field: str(res_value) for res_value, select_field in zip(db_response, select)}
+        if db_response:
+            data = {select_field: str(res_value) for res_value, select_field in 
+                    zip(db_response, select)}
+        else:
+            raise WazuhException(1704, "{0} table is empty".format(table))
 
         return data
 
