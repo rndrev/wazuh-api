@@ -211,12 +211,12 @@ class Agent:
         query = "SELECT {0} FROM {1}"
         request = {}
         if filters:
-            query += " WHERE "
+            query += " WHERE"
             for key,value in filters:
-                query += "{0} = :{0},".format(key)
+                query += " {0} = :{0} AND".format(key)
                 request[key] = value
-            # remove last comma
-            query = query[:-1]
+            # remove last AND
+            query = query[:-3]
 
         conn.execute(query.format(','.join(select), table),request)
         db_response = conn.fetch()
@@ -225,7 +225,7 @@ class Agent:
             data = {select_field: str(res_value) for res_value, select_field in 
                     zip(db_response, select)}
         else:
-            raise WazuhException(1704, "{0} table is empty".format(table))
+            raise WazuhException(1704, "Error in query from table {0}".format(table))
 
         return data
 
@@ -622,7 +622,7 @@ class Agent:
         return Agent(agent_id)._load_info_from_agent_db(table='hwinfo', select=select)
 
     @staticmethod
-    def get_network(agent_id, offset=0, limit=common.database_limit):
+    def get_network(agent_id, device_id=None, offset=0, limit=common.database_limit):
         """
         Get info about an agent's network device(s)
         """
@@ -635,9 +635,11 @@ class Agent:
             select = ['name', 'type', 'state', 'mac', 'tx_packets', 'rx_packets', 
                       'tx_bytes', 'rx_bytes', 'mtu', 'ipv4id', 'ipv6id']
 
+        filters = [('name', device_id)] if device_id else []
         # retrieve data from netiface table
         agent = Agent(agent_id)
-        data = agent._load_info_from_agent_db(table='netiface', select=select)
+        data = agent._load_info_from_agent_db(table='netiface', select=select,
+                filters=filters)
         # retrieve data from netaddr table
         ipv4 = agent._load_info_from_agent_db(table='netaddr', select=['address', 
                'netmask', 'broadcast', 'gateway', 'dhcp'], filters=[('id', data['ipv4id'])])

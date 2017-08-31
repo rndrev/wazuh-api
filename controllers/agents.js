@@ -479,8 +479,8 @@ router.get('/:agent_id/os', function(req, res) {
 
 /**
  * @api {get} /agents/:agent_id/hardware Get hardware info
- * @apiName GetOs
- * @apiGroup Os
+ * @apiName GetHardware
+ * @apiGroup Hardware
  *
  * @apiParam {Number} agent_id Agent ID.
  *
@@ -504,9 +504,37 @@ router.get('/:agent_id/hardware', function(req, res) {
 })
 
 /**
+ * @api {get} /agents/:agent_id/network/:device_id Get an specific device's network info 
+ * @apiName GetNetworkDevice
+ * @apiGroup NetworkDevice
+ *
+ * @apiParam {Number} agent_id Agent ID.
+ * @apiParam {String} device_id Name of the device
+ *
+ * @apiDescription Returns the agent device's network info
+ *
+ * @apiExample {curl} Example usage*:
+ *     curl -u foo:bar -k -X GET "https://127.0.0.1:55000/agents/003/network/eth0?pretty"
+ *
+ */
+router.get('/:agent_id/network/:device_id', function(req, res) {
+    logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/network/:device_id");
+
+    var data_request = {'function': '/agents/:agent_id/network/:device_id', 'arguments': {}};
+
+    if (!filter.check(req.params, {'agent_id':'numbers', 'device_id':'names'}, req, res))  // Filter with error
+        return;
+
+    data_request['arguments']['agent_id'] = req.params.agent_id;
+    data_request['arguments']['device_id'] = req.params.device_id;
+
+    execute.exec(python_bin, [wazuh_control], data_request, function (data) { res_h.send(req, res, data); });
+})
+
+/**
  * @api {get} /agents/:agent_id/network Get network info
- * @apiName GetOs
- * @apiGroup Os
+ * @apiName GetNetwork
+ * @apiGroup Network
  *
  * @apiParam {Number} agent_id Agent ID.
  *
