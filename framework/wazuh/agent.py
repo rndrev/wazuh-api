@@ -37,6 +37,22 @@ def create_exception_dic(id, e):
     exception_dic['error'] = {'message': e.message, 'code': e.code}
     return exception_dic
 
+def get_agent_os_name(agent_id):
+    """
+    Returns a string with an agent's os name
+    """
+    db_global = glob(common.database_path_global)
+    if not db_global:
+        raise WazuhException(1600)
+
+    conn = Connection(db_global[0])
+    query = "SELECT os_name FROM agent WHERE id = :id"
+    request = {'id': agent_id}
+    conn.execute(query, request)
+    os_name = str(conn.fetch()[0])
+
+    return os_name
+
 class Agent:
     """
     OSSEC Agent object.
@@ -185,14 +201,24 @@ class Agent:
         if no_result:
             raise WazuhException(1701, self.id)
 
-    def _load_info_from_agent_db(self, table, select):
+    def _load_info_from_agent_db(self, table, select, filters=[]):
         db_agent = glob('{0}/{1}-*.db'.format(common.database_path_agents, self.id))
         
         if not db_agent:
             raise WazuhException(1600)
 
         conn = Connection(db_agent[0])
-        conn.execute("SELECT {0} FROM {1}".format(','.join(select), table))
+        query = "SELECT {0} FROM {1}"
+        request = {}
+        if filters:
+            query += " WHERE "
+            for key,value in filters:
+                query += "{0} = :{0},".format(key)
+                request[key] = value
+            # remove last comma
+            query = query[:-1]
+
+        conn.execute(query.format(','.join(select), table),request)
         db_response = conn.fetch()
 
         if db_response:
@@ -574,15 +600,7 @@ class Agent:
         Get info about an agent's OS
         """
         # The osinfo fields in database are different in Windows and Linux
-        db_global = glob(common.database_path_global)
-        if not db_global:
-            raise WazuhException(1600)
-
-        conn = Connection(db_global[0])
-        query = "SELECT os_name FROM agent WHERE id = :id"
-        request = {'id': agent_id}
-        conn.execute(query, request)
-        os_name = str(conn.fetch()[0])
+        os_name = get_agent_os_name(agent_id)
 
         if 'Windows' in os_name:
             select = ['os_name', 'os_major', 'os_minor', 'os_build', 
@@ -602,6 +620,39 @@ class Agent:
                   'ram_total', 'ram_free']
 
         return Agent(agent_id)._load_info_from_agent_db(table='hwinfo', select=select)
+
+    @staticmethod
+    def get_network(agent_id, offset=0, limit=common.database_limit):
+        """
+        Get info about an agent's network device(s)
+        """
+        # The netiface fields in database are different in Windows and Linux
+        os_name = get_agent_os_name(agent_id)
+
+        if 'Windows' in os_name:
+            select = ['name', 'adapter', 'type', 'state', 'mac', 'mtu', 'ipv4id', 'ipv6id']
+        else:
+            select = ['name', 'type', 'state', 'mac', 'tx_packets', 'rx_packets', 
+                      'tx_bytes', 'rx_bytes', 'mtu', 'ipv4id', 'ipv6id']
+
+        # retrieve data from netiface table
+        agent = Agent(agent_id)
+        data = agent._load_info_from_agent_db(table='netiface', select=select)
+        # retrieve data from netaddr table
+        ipv4 = agent._load_info_from_agent_db(table='netaddr', select=['address', 
+               'netmask', 'broadcast', 'gateway', 'dhcp'], filters=[('id', data['ipv4id'])])
+        ipv6 = agent._load_info_from_agent_db(table='netaddr', select = ['address',
+               'netmask', 'dhcp'], filters=[('id', data['ipv6id'])])
+
+        # remove database ids from final dictionary
+        data.pop('ipv4id')
+        data.pop('ipv6id')
+
+        data['ipv4'] = ipv4
+        data['ipv6'] = ipv6
+
+        return data
+
 
     @staticmethod
     def get_agents_overview(status="all", os_platform="all", os_version="all", offset=0, limit=common.database_limit, sort=None, search=None):
