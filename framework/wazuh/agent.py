@@ -604,9 +604,9 @@ class Agent:
 
         if 'Windows' in os_name:
             select = ['os_name', 'os_major', 'os_minor', 'os_build', 
-                      'os_version', 'nodename', 'machine']
+                      'os_version', 'node_name', 'machine']
         else:
-            select = ['os_name', 'os_version', 'nodename', 'machine', 
+            select = ['os_name', 'os_version', 'node_name', 'machine', 
                       'os_platform', 'sysname', 'release', 'version']
 
         return Agent(agent_id)._load_info_from_agent_db(table='osinfo', select=select)
@@ -630,10 +630,10 @@ class Agent:
         os_name = get_agent_os_name(agent_id)
 
         if 'Windows' in os_name:
-            select = ['name', 'adapter', 'type', 'state', 'mac', 'mtu', 'ipv4id', 'ipv6id']
+            select = ['name', 'adapter', 'type', 'state', 'mac', 'mtu', 'id_ipv4', 'id_ipv6']
         else:
             select = ['name', 'type', 'state', 'mac', 'tx_packets', 'rx_packets', 
-                      'tx_bytes', 'rx_bytes', 'mtu', 'ipv4id', 'ipv6id']
+                      'tx_bytes', 'rx_bytes', 'mtu', 'id_ipv4', 'id_ipv6']
 
         filters = [('name', device_id)] if device_id else []
         # retrieve data from netiface table
@@ -642,13 +642,13 @@ class Agent:
                 filters=filters)
         # retrieve data from netaddr table
         ipv4 = agent._load_info_from_agent_db(table='netaddr', select=['address', 
-               'netmask', 'broadcast', 'gateway', 'dhcp'], filters=[('id', data['ipv4id'])])
+               'netmask', 'broadcast', 'gateway', 'dhcp'], filters=[('id', data['id_ipv4'])])
         ipv6 = agent._load_info_from_agent_db(table='netaddr', select = ['address',
-               'netmask', 'dhcp'], filters=[('id', data['ipv6id'])])
+               'netmask', 'dhcp'], filters=[('id', data['id_ipv6'])])
 
         # remove database ids from final dictionary
-        data.pop('ipv4id')
-        data.pop('ipv6id')
+        data.pop('id_ipv4')
+        data.pop('id_ipv6')
 
         data['ipv4'] = ipv4
         data['ipv6'] = ipv6
