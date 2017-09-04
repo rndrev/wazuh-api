@@ -595,21 +595,25 @@ class Agent:
         self.id = agent_id
 
     @staticmethod
-    def get_os(agent_id, offset=0, limit=common.database_limit):
+    def get_os(agent_id, offset=0, limit=common.database_limit, select=None):
         """
         Get info about an agent's OS
         """
         # The osinfo fields in database are different in Windows and Linux
         os_name = get_agent_os_name(agent_id)
+        windows_fields = ['os_name', 'os_major', 'os_minor', 'os_build', 
+                          'os_version', 'node_name', 'machine']
+        linux_fields   = ['os_name', 'os_version', 'node_name', 'machine', 
+                          'os_platform', 'sysname', 'release', 'version']
 
-        if 'Windows' in os_name:
-            select = ['os_name', 'os_major', 'os_minor', 'os_build', 
-                      'os_version', 'node_name', 'machine']
+        if select:
+            select_fields = list(set(select['fields']) & set(windows_fields)) \
+                            if 'Windows' in os_name else \
+                            list(set(select['fields']) & set(linux_fields))
         else:
-            select = ['os_name', 'os_version', 'node_name', 'machine', 
-                      'os_platform', 'sysname', 'release', 'version']
+            select_fields = windows_fields if 'Windows' in os_name else linux_fields
 
-        return Agent(agent_id)._load_info_from_agent_db(table='osinfo', select=select)
+        return Agent(agent_id)._load_info_from_agent_db(table='osinfo', select=select_fields)
 
     @staticmethod
     def get_hardware(agent_id, offset=0, limit=common.database_limit, select=None):

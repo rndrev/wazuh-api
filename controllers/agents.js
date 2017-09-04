@@ -468,11 +468,18 @@ router.get('/:agent_id/sys/os', function(req, res) {
     logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/sys/os");
 
     var data_request = {'function': '/agents/:agent_id/sys/os', 'arguments': {}};
+    var filters = {'select':'select_param'};
 
     if (!filter.check(req.params, {'agent_id':'numbers'}, req, res))  // Filter with error
         return;
 
+    if (!filter.check(req.query, filters, req, res))
+        return;
+
     data_request['arguments']['agent_id'] = req.params.agent_id;
+
+    if ('select' in req.query)
+        data_request['arguments']['select'] = filter.select_param_to_json(req.query.select)
 
     execute.exec(python_bin, [wazuh_control], data_request, function (data) { res_h.send(req, res, data); });
 })
