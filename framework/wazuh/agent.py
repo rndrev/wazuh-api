@@ -656,14 +656,13 @@ class Agent:
         return data
 
     @staticmethod
-    def get_syscollector_info(agent_id, offset=0, limit=common.database_limit):
+    def get_syscollector_info(agent_id, offset=0, limit=common.database_limit, select=None):
         """
         Get all syscollector info
         """
-        data = {}
-        data['os']       = Agent.get_os(agent_id)
-        data['hardware'] = Agent.get_hardware(agent_id)
-        data['network']  = Agent.get_network(agent_id)
+        fields = select['fields'] if select else ['os','hardware','network']
+
+        data = {field:getattr(Agent, 'get_{0}'.format(field))(agent_id) for field in fields}
 
         return data
 
