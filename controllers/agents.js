@@ -521,12 +521,19 @@ router.get('/:agent_id/sys/network/:device_id', function(req, res) {
     logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/sys/network/:device_id");
 
     var data_request = {'function': '/agents/:agent_id/sys/network/:device_id', 'arguments': {}};
+    var filters = {'select':'select_param'};
 
     if (!filter.check(req.params, {'agent_id':'numbers', 'device_id':'names'}, req, res))  // Filter with error
         return;
 
+    if (!filter.check(req.query, filters, req, res))
+        return;
+
     data_request['arguments']['agent_id'] = req.params.agent_id;
     data_request['arguments']['device_id'] = req.params.device_id;
+
+    if ('select' in req.query)
+        data_request['arguments']['select'] = filter.select_param_to_json(req.query.select)
 
     execute.exec(python_bin, [wazuh_control], data_request, function (data) { res_h.send(req, res, data); });
 })
@@ -548,11 +555,18 @@ router.get('/:agent_id/sys/network', function(req, res) {
     logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/sys/network");
 
     var data_request = {'function': '/agents/:agent_id/sys/network', 'arguments': {}};
+    var filters = {'select':'select_param'};
 
     if (!filter.check(req.params, {'agent_id':'numbers'}, req, res))  // Filter with error
         return;
 
+    if (!filter.check(req.query, filters, req, res))
+        return;
+
     data_request['arguments']['agent_id'] = req.params.agent_id;
+
+    if ('select' in req.query)
+        data_request['arguments']['select'] = filter.select_param_to_json(req.query.select)
 
     execute.exec(python_bin, [wazuh_control], data_request, function (data) { res_h.send(req, res, data); });
 })
@@ -574,7 +588,7 @@ router.get('/:agent_id/sys', function(req, res) {
     logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/sys");
 
     var data_request = {'function': '/agents/:agent_id/sys', 'arguments': {}};
-    var filters = {'select':'select_param'}
+    var filters = {'select':'select_param'};
 
     if (!filter.check(req.params, {'agent_id':'numbers'}, req, res))  // Filter with error
         return;

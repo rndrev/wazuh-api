@@ -622,36 +622,44 @@ class Agent:
         return Agent(agent_id)._load_info_from_agent_db(table='hwinfo', select=select)
 
     @staticmethod
-    def get_network(agent_id, device_id=None, offset=0, limit=common.database_limit):
+    def get_network(agent_id, device_id=None, offset=0, limit=common.database_limit, select=None):
         """
         Get info about an agent's network device(s)
         """
         # The netiface fields in database are different in Windows and Linux
         os_name = get_agent_os_name(agent_id)
+        windows_fields = ['name', 'adapter', 'type', 'state', 'mac', 'mtu', 
+                          'id_ipv4', 'id_ipv6']
+        linux_fields = ['name', 'type', 'state', 'mac', 'tx_packets', 
+                        'rx_packets', 'tx_bytes', 'rx_bytes', 'mtu', 
+                        'id_ipv4', 'id_ipv6']
 
-        if 'Windows' in os_name:
-            select = ['name', 'adapter', 'type', 'state', 'mac', 'mtu', 'id_ipv4', 'id_ipv6']
+        if select:
+            select_fields = list(set(select['fields']) & set(windows_fields)) \
+                            if 'Windows' in os_name else \
+                            list(set(select['fields']) & set(linux_fields))
         else:
-            select = ['name', 'type', 'state', 'mac', 'tx_packets', 'rx_packets', 
-                      'tx_bytes', 'rx_bytes', 'mtu', 'id_ipv4', 'id_ipv6']
+            select_fields = windows_fields if 'Windows' in os_name else linux_fields
 
         filters = [('name', device_id)] if device_id else []
         # retrieve data from netiface table
         agent = Agent(agent_id)
-        data = agent._load_info_from_agent_db(table='netiface', select=select,
-                filters=filters)
-        # retrieve data from netaddr table
-        ipv4 = agent._load_info_from_agent_db(table='netaddr', select=['address', 
-               'netmask', 'broadcast', 'gateway', 'dhcp'], filters=[('id', data['id_ipv4'])])
-        ipv6 = agent._load_info_from_agent_db(table='netaddr', select = ['address',
-               'netmask', 'dhcp'], filters=[('id', data['id_ipv6'])])
+        data = agent._load_info_from_agent_db(table='netiface', 
+                select=select_fields, filters=filters)
 
-        # remove database ids from final dictionary
-        data.pop('id_ipv4')
-        data.pop('id_ipv6')
+        if 'id_ipv4' in select_fields:
+            ipv4 = agent._load_info_from_agent_db(table='netaddr', 
+                    select=['address', 'netmask', 'broadcast', 'gateway', 
+                    'dhcp'], filters=[('id', data['id_ipv4'])])
+            data.pop('id_ipv4')
+            data['ipv4'] = ipv4
 
-        data['ipv4'] = ipv4
-        data['ipv6'] = ipv6
+        if 'id_ipv6' in select_fields:
+            ipv6 = agent._load_info_from_agent_db(table='netaddr', 
+                    select = ['address', 'netmask', 'dhcp'], filters=[('id', 
+                    data['id_ipv6'])])
+            data.pop('id_ipv6')
+            data['ipv6'] = ipv6
 
         return data
 
