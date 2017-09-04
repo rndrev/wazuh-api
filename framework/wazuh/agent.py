@@ -612,14 +612,17 @@ class Agent:
         return Agent(agent_id)._load_info_from_agent_db(table='osinfo', select=select)
 
     @staticmethod
-    def get_hardware(agent_id, offset=0, limit=common.database_limit):
+    def get_hardware(agent_id, offset=0, limit=common.database_limit, select=None):
         """
         Get info about an agent's OS
         """
-        select = ['board_serial', 'cpu_name', 'cpu_cores', 'cpu_mhz', 
-                  'ram_total', 'ram_free']
+        if select:
+            select_fields = select['fields']
+        else:
+            select_fields = ['board_serial', 'cpu_name', 'cpu_cores', 'cpu_mhz', 
+                             'ram_total', 'ram_free']
 
-        return Agent(agent_id)._load_info_from_agent_db(table='hwinfo', select=select)
+        return Agent(agent_id)._load_info_from_agent_db(table='hwinfo', select=select_fields)
 
     @staticmethod
     def get_network(agent_id, device_id=None, offset=0, limit=common.database_limit, select=None):
