@@ -452,7 +452,7 @@ router.get('/:agent_id/upgrade_result', function(req, res) {
 })
 
 /**
- * @api {get} /agents/:agent_id/os Get os info
+ * @api {get} /agents/:agent_id/sys/os Get os info
  * @apiName GetOs
  * @apiGroup Os
  *
@@ -461,13 +461,13 @@ router.get('/:agent_id/upgrade_result', function(req, res) {
  * @apiDescription Returns the agent's OS info
  *
  * @apiExample {curl} Example usage*:
- *     curl -u foo:bar -k -X GET "https://127.0.0.1:55000/agents/003/os?pretty"
+ *     curl -u foo:bar -k -X GET "https://127.0.0.1:55000/agents/003/sys/os?pretty"
  *
  */
-router.get('/:agent_id/os', function(req, res) {
-    logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/os");
+router.get('/:agent_id/sys/os', function(req, res) {
+    logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/sys/os");
 
-    var data_request = {'function': '/agents/:agent_id/os', 'arguments': {}};
+    var data_request = {'function': '/agents/:agent_id/sys/os', 'arguments': {}};
 
     if (!filter.check(req.params, {'agent_id':'numbers'}, req, res))  // Filter with error
         return;
@@ -478,7 +478,7 @@ router.get('/:agent_id/os', function(req, res) {
 })
 
 /**
- * @api {get} /agents/:agent_id/hardware Get hardware info
+ * @api {get} /agents/:agent_id/sys/hardware Get hardware info
  * @apiName GetHardware
  * @apiGroup Hardware
  *
@@ -487,13 +487,13 @@ router.get('/:agent_id/os', function(req, res) {
  * @apiDescription Returns the agent's hardware info
  *
  * @apiExample {curl} Example usage*:
- *     curl -u foo:bar -k -X GET "https://127.0.0.1:55000/agents/003/hardware?pretty"
+ *     curl -u foo:bar -k -X GET "https://127.0.0.1:55000/agents/003/sys/hardware?pretty"
  *
  */
-router.get('/:agent_id/hardware', function(req, res) {
-    logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/hardware");
+router.get('/:agent_id/sys/hardware', function(req, res) {
+    logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/sys/hardware");
 
-    var data_request = {'function': '/agents/:agent_id/hardware', 'arguments': {}};
+    var data_request = {'function': '/agents/:agent_id/sys/hardware', 'arguments': {}};
 
     if (!filter.check(req.params, {'agent_id':'numbers'}, req, res))  // Filter with error
         return;
@@ -504,7 +504,7 @@ router.get('/:agent_id/hardware', function(req, res) {
 })
 
 /**
- * @api {get} /agents/:agent_id/network/:device_id Get an specific device's network info 
+ * @api {get} /agents/:agent_id/sys/network/:device_id Get an specific device's network info 
  * @apiName GetNetworkDevice
  * @apiGroup NetworkDevice
  *
@@ -514,13 +514,13 @@ router.get('/:agent_id/hardware', function(req, res) {
  * @apiDescription Returns the agent device's network info
  *
  * @apiExample {curl} Example usage*:
- *     curl -u foo:bar -k -X GET "https://127.0.0.1:55000/agents/003/network/eth0?pretty"
+ *     curl -u foo:bar -k -X GET "https://127.0.0.1:55000/agents/003/sys/network/eth0?pretty"
  *
  */
-router.get('/:agent_id/network/:device_id', function(req, res) {
-    logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/network/:device_id");
+router.get('/:agent_id/sys/network/:device_id', function(req, res) {
+    logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/sys/network/:device_id");
 
-    var data_request = {'function': '/agents/:agent_id/network/:device_id', 'arguments': {}};
+    var data_request = {'function': '/agents/:agent_id/sys/network/:device_id', 'arguments': {}};
 
     if (!filter.check(req.params, {'agent_id':'numbers', 'device_id':'names'}, req, res))  // Filter with error
         return;
@@ -532,7 +532,7 @@ router.get('/:agent_id/network/:device_id', function(req, res) {
 })
 
 /**
- * @api {get} /agents/:agent_id/network Get network info
+ * @api {get} /agents/:agent_id/sys/network Get network info
  * @apiName GetNetwork
  * @apiGroup Network
  *
@@ -541,13 +541,13 @@ router.get('/:agent_id/network/:device_id', function(req, res) {
  * @apiDescription Returns the agent's network info
  *
  * @apiExample {curl} Example usage*:
- *     curl -u foo:bar -k -X GET "https://127.0.0.1:55000/agents/003/network?pretty"
+ *     curl -u foo:bar -k -X GET "https://127.0.0.1:55000/agents/003/sys/network?pretty"
  *
  */
-router.get('/:agent_id/network', function(req, res) {
-    logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/network");
+router.get('/:agent_id/sys/network', function(req, res) {
+    logger.debug(req.connection.remoteAddress + " GET /agents/:agent_id/sys/network");
 
-    var data_request = {'function': '/agents/:agent_id/network', 'arguments': {}};
+    var data_request = {'function': '/agents/:agent_id/sys/network', 'arguments': {}};
 
     if (!filter.check(req.params, {'agent_id':'numbers'}, req, res))  // Filter with error
         return;
