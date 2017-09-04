@@ -936,8 +936,8 @@ router.post('/groups/configuration', function(req, res) {
 
     var data_request = {'function': 'POST/agents/groups/configuration', 'arguments': {}};
 
-    // if (!filter.check(req.body, {'group_id':'names'}, req, res))  // Filter with error
-    //     return;
+    if (!filter.check(req.body, {'group_id':'names', 'new_conf':'json_obj'}, req, res))  // Filter with error
+        return;
 
     data_request['arguments']['group_id'] = req.body.group_id;
     data_request['arguments']['new_conf'] = req.body.new_conf;

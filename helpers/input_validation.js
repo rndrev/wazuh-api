@@ -116,3 +116,10 @@ exports.ossec_key = function(param) {
     else
         return false;
 }
+
+exports.json_obj = function(objson) {
+    if (typeof objson != 'undefined') {
+        var regex = /^\{\s*\".*\}$|^\[\n?\{\s*\".*\}\n?\]$/;
+        return regex.test(JSON.stringify(objson));
+    } else return false;
+}
