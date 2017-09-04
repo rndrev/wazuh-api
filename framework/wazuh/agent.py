@@ -655,6 +655,18 @@ class Agent:
 
         return data
 
+    @staticmethod
+    def get_syscollector_info(agent_id, offset=0, limit=common.database_limit):
+        """
+        Get all syscollector info
+        """
+        data = {}
+        data['os']       = Agent.get_os(agent_id)
+        data['hardware'] = Agent.get_hardware(agent_id)
+        data['network']  = Agent.get_network(agent_id)
+
+        return data
+
 
     @staticmethod
     def get_agents_overview(status="all", os_platform="all", os_version="all", offset=0, limit=common.database_limit, sort=None, search=None):

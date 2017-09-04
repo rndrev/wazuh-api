@@ -170,6 +170,7 @@ if __name__ == "__main__":
             '/agents/:agent_id/sys/hardware': Agent.get_hardware,
             '/agents/:agent_id/sys/network': Agent.get_network,
             '/agents/:agent_id/sys/network/:device_id': Agent.get_network,
+            '/agents/:agent_id/sys': Agent.get_syscollector_info,
             'PUT/agents/:agent_id/upgrade': Agent.upgrade_agent,
             'PUT/agents/:agent_id/upgrade_custom': Agent.upgrade_agent_custom,
             'PUT/agents/:agent_id/restart': Agent.restart_agents,
