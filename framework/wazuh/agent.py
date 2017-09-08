@@ -691,7 +691,15 @@ class Agent:
         """
         Get all syscollector info
         """
-        fields = select['fields'] if select else ['os','hardware','network']
+        valid_select_fields = ['os','hardware','network']
+        if select:
+            if not set(select['fields']).issubset(valid_select_fields):
+                uncorrect_fields = map(lambda x: str(x), set(select['fields']) - set(valid_select_fields))
+                raise WazuhException(1724, "Allowed select fields {0}. Fields {1}".\
+                        format(valid_select_fields, uncorrect_fields))
+            fields = select['fields']
+        else:
+            fields = valid_select_fields
 
         data = {field:getattr(Agent, 'get_{0}'.format(field))(agent_id) for field in fields}
 
