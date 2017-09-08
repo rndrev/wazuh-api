@@ -605,13 +605,18 @@ class Agent:
                           'os_version', 'node_name', 'machine']
         linux_fields   = ['os_name', 'os_version', 'node_name', 'machine', 
                           'os_platform', 'sysname', 'release', 'version']
+        valid_select_fields = windows_fields if 'Windows' in os_name else linux_fields
 
         if select:
             select_fields = list(set(select['fields']) & set(windows_fields)) \
                             if 'Windows' in os_name else \
                             list(set(select['fields']) & set(linux_fields))
+            if select_fields == []:
+                uncorrect_fields = map(lambda x: str(x), set(select['fields']) - set(valid_select_fields))
+                raise WazuhException(1724, "Allowed select fields: {0}. Fields {1}".\
+                    format(valid_select_fields, uncorrect_fields))
         else:
-            select_fields = windows_fields if 'Windows' in os_name else linux_fields
+            select_fields = valid_select_fields
 
         return Agent(agent_id)._load_info_from_agent_db(table='osinfo', select=select_fields)
 
@@ -620,11 +625,17 @@ class Agent:
         """
         Get info about an agent's OS
         """
+        valid_select_fields = ['board_serial', 'cpu_name', 'cpu_cores', 'cpu_mhz', 
+                               'ram_total', 'ram_free']
+
         if select:
+            if not set(select['fields']).issubset(valid_select_fields):
+                uncorrect_fields = map(lambda x: str(x), set(select['fields']) - set(valid_select_fields))
+                raise WazuhException(1724, "Allowed select fields: {0}. Fields {1}".\
+                        format(valid_select_fields, uncorrect_fields))
             select_fields = select['fields']
         else:
-            select_fields = ['board_serial', 'cpu_name', 'cpu_cores', 'cpu_mhz', 
-                             'ram_total', 'ram_free']
+            select_fields = valid_select_fields
 
         return Agent(agent_id)._load_info_from_agent_db(table='hwinfo', select=select_fields)
 
@@ -640,13 +651,18 @@ class Agent:
         linux_fields = ['name', 'type', 'state', 'mac', 'tx_packets', 
                         'rx_packets', 'tx_bytes', 'rx_bytes', 'mtu', 
                         'id_ipv4', 'id_ipv6']
+        valid_select_fields = windows_fields if 'Windows' in os_name else linux_fields
 
         if select:
             select_fields = list(set(select['fields']) & set(windows_fields)) \
                             if 'Windows' in os_name else \
                             list(set(select['fields']) & set(linux_fields))
+            if select_fields == []:
+                uncorrect_fields = map(lambda x: str(x), set(select['fields']) - set(valid_select_fields))
+                raise WazuhException(1724, "Allowed select fields: {0}. Fields {1}".\
+                    format(valid_select_fields, uncorrect_fields))
         else:
-            select_fields = windows_fields if 'Windows' in os_name else linux_fields
+            select_fields = valid_select_fields
 
         filters = [('name', device_id)] if device_id else []
         # retrieve data from netiface table
