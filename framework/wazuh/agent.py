@@ -30,7 +30,7 @@ except ImportError:
 
 def create_exception_dic(id, e):
     """
-    Creates a dictionary with a list of agent ids and it's error codes. 
+    Creates a dictionary with a list of agent ids and it's error codes.
     """
     exception_dic = {}
     exception_dic['id'] = id
@@ -398,7 +398,6 @@ class Agent:
         :param force: Remove old agents with same IP if disconnected since <force> seconds
         :return: Agent ID.
         """
-
         manager_status = manager.status()
         if 'ossec-authd' not in manager_status or manager_status['ossec-authd'] != 'running':
             data = self._add_manual(name, ip, id, key, force)
@@ -472,6 +471,18 @@ class Agent:
             raise WazuhException(1709)
 
         force = force if type(force) == int else int(force)
+
+        # Check manager name
+        db_global = glob(common.database_path_global)
+        if not db_global:
+            raise WazuhException(1600)
+
+        conn = Connection(db_global[0])
+        conn.execute("SELECT name FROM agent WHERE (id = 0)")
+        manager_name = str(conn.fetch()[0])
+
+        if name == manager_name:
+            raise WazuhException(1705, name)
 
         # Check if ip, name or id exist in client.keys
         last_id = 0
@@ -639,10 +650,10 @@ class Agent:
             query += ' ORDER BY id ASC'
 
 
-
-        query += ' LIMIT :offset,:limit'
-        request['offset'] = offset
-        request['limit'] = limit
+        if limit:
+            query += ' LIMIT :offset,:limit'
+            request['offset'] = offset
+            request['limit'] = limit
 
         conn.execute(query.format(','.join(select)), request)
 
@@ -1591,7 +1602,7 @@ class Agent:
         s.close()
         if debug:
             print("RESPONSE: {0}".format(data))
-        if data.startswith('err'):
+        if data != 'ok':
             raise WazuhException(1715, data.replace("err ",""))
 
         # Sending file to agent
@@ -1602,7 +1613,7 @@ class Agent:
             print("Sending: {0}".format(common.ossec_path + "/var/upgrade/" + wpk_file))
         try:
             start_time = time()
-            bytes_read = file.read(512)
+            bytes_read = file.read(common.wpk_read_size)
             bytes_read_acum = 0
             while bytes_read:
                 s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -1611,9 +1622,9 @@ class Agent:
                 s.send(msg.encode() + bytes_read)
                 data = s.recv(1024).decode()
                 s.close()
-                if data.startswith('err'):
+                if data != 'ok':
                     raise WazuhException(1715, data.replace("err ",""))
-                bytes_read = file.read(512)
+                bytes_read = file.read(common.wpk_read_size)
                 if show_progress:
                     bytes_read_acum = bytes_read_acum + len(bytes_read)
                     show_progress(int(bytes_read_acum * 100 / wpk_file_size) + (bytes_read_acum * 100 % wpk_file_size > 0))
@@ -1632,7 +1643,7 @@ class Agent:
         s.close()
         if debug:
             print("RESPONSE: {0}".format(data))
-        if data.startswith('err'):
+        if data != 'ok':
             raise WazuhException(1715, data.replace("err ",""))
 
         # Get file SHA1 from agent and compare
@@ -1646,6 +1657,8 @@ class Agent:
         s.close()
         if debug:
             print("RESPONSE: {0}".format(data))
+        if not data.startswith('ok '):
+            raise WazuhException(1715, data.replace("err ",""))
         rcv_sha1 = data.split(' ')[1]
         if rcv_sha1 == file_sha1:
             return ["WPK file sent", wpk_file]
@@ -1724,7 +1737,7 @@ class Agent:
         return Agent(agent_id).upgrade(wpk_repo=wpk_repo, version=version, force=True if int(force)==1 else False)
 
 
-    def upgrade_result(self, debug=False, timeout=60):
+    def upgrade_result(self, debug=False, timeout=common.upgrade_result_retries):
         """
         Read upgrade result output from agent.
         """
@@ -1742,7 +1755,7 @@ class Agent:
             print("RESPONSE: {0}".format(data))
         counter = 0
         while data.startswith('err') and counter < timeout:
-            sleep(1)
+            sleep(common.upgrade_result_sleep)
             counter = counter + 1
             s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             s.connect(common.ossec_path + "/queue/ossec/request")
@@ -1803,7 +1816,7 @@ class Agent:
         s.close()
         if debug:
             print("RESPONSE: {0}".format(data))
-        if data.startswith('err'):
+        if data != 'ok':
             raise WazuhException(1715, data.replace("err ",""))
 
         # Sending file to agent
@@ -1812,7 +1825,7 @@ class Agent:
             raise WazuhException(1715, data.replace("err ",""))
         try:
             start_time = time()
-            bytes_read = file.read(512)
+            bytes_read = file.read(common.wpk_read_size)
             file_sha1=sha1(bytes_read)
             bytes_read_acum = 0
             while bytes_read:
@@ -1822,7 +1835,7 @@ class Agent:
                 s.send(msg.encode() + bytes_read)
                 data = s.recv(1024).decode()
                 s.close()
-                bytes_read = file.read(512)
+                bytes_read = file.read(common.wpk_read_size)
                 file_sha1.update(bytes_read)
                 if show_progress:
                     bytes_read_acum = bytes_read_acum + len(bytes_read)
@@ -1845,7 +1858,7 @@ class Agent:
         s.close()
         if debug:
             print("RESPONSE: {0}".format(data))
-        if data.startswith('err'):
+        if data != 'ok':
             raise WazuhException(1715, data.replace("err ",""))
 
         # Get file SHA1 from agent and compare
@@ -1859,6 +1872,8 @@ class Agent:
         s.close()
         if debug:
             print("RESPONSE: {0}".format(data))
+        if not data.startswith('ok '):
+            raise WazuhException(1715, data.replace("err ",""))
         rcv_sha1 = data.split(' ')[1]
         if calc_sha1 == rcv_sha1:
             return ["WPK file sent", wpk_file]
