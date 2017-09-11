@@ -48,6 +48,8 @@ errors['615'] = "Param not valid. Valid characters: a-z A-Z 0-9";  // keys
 errors['ossec_key'] = 615;
 errors['616'] = "Param not valid. Valid characters: array of numbers";
 errors['array_numbers'] = 616;
+errors['617'] = "Param not valid. List of JSONs expected.";
+errors['json_obj'] = 617;
 
 errors['700'] = "File not found"
 
