@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 ## [v3.0.0]
 ### Added
 - New request: Modify configuration of a group of agents - `POST /agents/groups/configuration - Params: {"group_id":"group_id", "new_conf":["config"{...}]}`
+- Added a new class on the Python framework: `InputValidation`.
+
+### Fixed
+- When adding a new agent, now it checks that its name is different than manager's name.
+
+
+## [v2.1.1]
+### Fixed
+- Issue issue when deleting and restarting a list of agents
+- Issue with socket comunication in authd.
 
 ## [v2.1.0]
 ### Added
