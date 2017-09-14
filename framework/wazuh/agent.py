@@ -38,22 +38,6 @@ def create_exception_dic(id, e):
     exception_dic['error'] = {'message': e.message, 'code': e.code}
     return exception_dic
 
-def get_agent_os_name(agent_id):
-    """
-    Returns a string with an agent's os name
-    """
-    db_global = glob(common.database_path_global)
-    if not db_global:
-        raise WazuhException(1600)
-
-    conn = Connection(db_global[0])
-    query = "SELECT os_name FROM agent WHERE id = :id"
-    request = {'id': agent_id}
-    conn.execute(query, request)
-    os_name = str(conn.fetch()[0])
-
-    return os_name
-
 class Agent:
     """
     OSSEC Agent object.
@@ -609,13 +593,30 @@ class Agent:
 
         self.id = agent_id
 
+
+    def get_agent_attr(self, attr):
+        """
+        Returns a string with an agent's os name
+        """
+        db_global = glob(common.database_path_global)
+        if not db_global:
+            raise WazuhException(1600)
+
+        conn = Connection(db_global[0])
+        query = "SELECT :attr FROM agent WHERE id = :id"
+        request = {'attr':attr, 'id': self.id}
+        conn.execute(query, request)
+        query_value = str(conn.fetch()[0])
+
+        return query_value
+
     @staticmethod
     def get_os(agent_id, offset=0, limit=common.database_limit, select=None):
         """
         Get info about an agent's OS
         """
         # The osinfo fields in database are different in Windows and Linux
-        os_name = get_agent_os_name(agent_id)
+        os_name = Agent(agent_id).get_agent_attr('os_name')
         windows_fields = ['os_name', 'os_major', 'os_minor', 'os_build', 
                           'os_version', 'nodename', 'machine']
         linux_fields   = ['os_name', 'os_version', 'nodename', 'machine', 
@@ -660,7 +661,7 @@ class Agent:
         Get info about an agent's network device(s)
         """
         # The netiface fields in database are different in Windows and Linux
-        os_name = get_agent_os_name(agent_id)
+        os_name = Agent(agent_id).get_agent_attr('os_name')
         windows_fields = ['name', 'adapter', 'type', 'state', 'mac', 'mtu', 
                           'id_ipv4', 'id_ipv6']
         linux_fields = ['name', 'type', 'state', 'mac', 'tx_packets', 
