@@ -23,6 +23,7 @@ from grp import getgrnam
 from time import time, sleep
 import socket
 from distutils.version import StrictVersion
+from itertools import groupby, chain
 try:
     from urllib2 import urlopen, URLError, HTTPError
 except ImportError:
@@ -224,10 +225,24 @@ class Agent:
         if db_response:
             data = {select_field: str(res_value) for res_value, select_field in 
                     zip(db_response, select)}
+            # nested is a dictionary with all fields that have a _ in their name
+            # it's used to created nested fields in the final JSON.
+            # This must not include fields that start with id_, because those are
+            # foreign keys.
+            nested = {k:list(filter(lambda x: x != k, chain.from_iterable(g)))
+                        for k,g in groupby(map(lambda x: x.split('_'), 
+                        sorted(filter(lambda x: not x.startswith('id'), data.keys()))), 
+                        key=lambda x:x[0])}
+            nested_dict = {f:{sf:data['{0}_{1}'.format(f,sf)] for sf in sfl} for f,sfl 
+                            in nested.items() if len(sfl) > 1}
+            non_nested_dict = {f:data[f] for f in data.keys() if f.split('_')[0] not in nested_dict.keys()}
+
+            nested_dict.update(non_nested_dict)
+
         else:
             raise WazuhException(1704, "Error in query from table {0}".format(table))
 
-        return data
+        return nested_dict
 
     def get_basic_information(self):
         """
@@ -602,8 +617,8 @@ class Agent:
         # The osinfo fields in database are different in Windows and Linux
         os_name = get_agent_os_name(agent_id)
         windows_fields = ['os_name', 'os_major', 'os_minor', 'os_build', 
-                          'os_version', 'node_name', 'machine']
-        linux_fields   = ['os_name', 'os_version', 'node_name', 'machine', 
+                          'os_version', 'nodename', 'machine']
+        linux_fields   = ['os_name', 'os_version', 'nodename', 'machine', 
                           'os_platform', 'sysname', 'release', 'version']
         valid_select_fields = windows_fields if 'Windows' in os_name else linux_fields
 

@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 import json
 import stat
 
-
 try:
     from subprocess import check_output
 except ImportError:
