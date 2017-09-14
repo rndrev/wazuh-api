@@ -19,7 +19,7 @@ var router = require('express').Router();
  *
  * @apiParam {Number} [offset] First element to return in the collection.
  * @apiParam {Number} [limit=500] Maximum number of elements to return.
- * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the begining to ascending or descending order.
+ * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to ascending or descending order.
  * @apiParam {String} [search] Looks for elements with the specified string.
  * @apiParam {string="active","never connected", "disconnected"} [status] Filters by agent status.
  * @apiParam {String} [os.platform] Filters by OS platform
@@ -88,7 +88,7 @@ router.get('/summary', cache(), function(req, res) {
  *
  * @apiParam {Number} [offset] First element to return in the collection.
  * @apiParam {Number} [limit=500] Maximum number of elements to return.
- * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the begining to ascending or descending order.
+ * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to ascending or descending order.
  * @apiParam {String} [search] Looks for elements with the specified string.
  *
  * @apiDescription Returns a summary of OS.
@@ -127,7 +127,7 @@ router.get('/summary/os', cache(), function(req, res) {
  *
  * @apiParam {Number} [offset] First element to return in the collection.
  * @apiParam {Number} [limit=500] Maximum number of elements to return.
- * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the begining to ascending or descending order.
+ * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to ascending or descending order.
  * @apiParam {String} [search] Looks for elements with the specified string.
  *
  * @apiDescription Returns the list of existing agent groups.
@@ -142,7 +142,8 @@ router.get('/groups', cache(), function(req, res) {
     req.apicacheGroup = "agents";
 
     var data_request = {'function': '/agents/groups', 'arguments': {}};
-    var filters = {'offset': 'numbers', 'limit': 'numbers', 'sort':'sort_param', 'search':'search_param'};
+    var filters = {'offset': 'numbers', 'limit': 'numbers', 'sort':'sort_param', 
+                   'search':'search_param', 'hash':'names'};
 
     if (!filter.check(req.query, filters, req, res))  // Filter with error
         return;
@@ -155,6 +156,8 @@ router.get('/groups', cache(), function(req, res) {
         data_request['arguments']['sort'] = filter.sort_param_to_json(req.query.sort);
     if ('search' in req.query)
         data_request['arguments']['search'] = filter.search_param_to_json(req.query.search);
+    if ('hash' in req.query)
+        data_request['arguments']['hash_algorithm'] = req.query.hash
 
     execute.exec(python_bin, [wazuh_control], data_request, function (data) { res_h.send(req, res, data); });
 })
@@ -167,7 +170,7 @@ router.get('/groups', cache(), function(req, res) {
  * @apiParam {String} group_id Group ID.
  * @apiParam {Number} [offset] First element to return in the collection.
  * @apiParam {Number} [limit=500] Maximum number of elements to return.
- * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the begining to ascending or descending order.
+ * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to ascending or descending order.
  * @apiParam {String} [search] Looks for elements with the specified string.
  *
  * @apiDescription Returns the list of agent in a group.
@@ -182,7 +185,7 @@ router.get('/groups/:group_id', cache(), function(req, res) {
     req.apicacheGroup = "agents";
 
     var data_request = {'function': '/agents/groups/:group_id', 'arguments': {}};
-    var filters = {'offset': 'numbers', 'limit': 'numbers', 'sort':'sort_param', 'search':'search_param'};
+    var filters = {'offset': 'numbers', 'limit': 'numbers', 'sort':'sort_param', 'search':'search_param', 'select':'select_param'};
 
     if (!filter.check(req.params, {'group_id':'names'}, req, res))  // Filter with error
         return;
@@ -201,9 +204,12 @@ router.get('/groups/:group_id', cache(), function(req, res) {
         data_request['arguments']['sort'] = filter.sort_param_to_json(req.query.sort);
     if ('search' in req.query)
         data_request['arguments']['search'] = filter.search_param_to_json(req.query.search);
+    if ('select' in req.query)
+        data_request['arguments']['select'] = filter.select_param_to_json(req.query.select);
 
     execute.exec(python_bin, [wazuh_control], data_request, function (data) { res_h.send(req, res, data); });
 })
+
 
 /**
  * @api {get} /agents/groups/:group_id/configuration Get group configuration
@@ -291,7 +297,7 @@ router.get('/groups/:group_id/files/:filename', cache(), function(req, res) {
  * @apiParam {String} group_id Group ID.
  * @apiParam {Number} [offset] First element to return in the collection.
  * @apiParam {Number} [limit=500] Maximum number of elements to return.
- * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the begining to ascending or descending order.
+ * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to ascending or descending order.
  * @apiParam {String} [search] Looks for elements with the specified string.
  *
  * @apiDescription Returns the files belonging to the group.
@@ -335,7 +341,7 @@ router.get('/groups/:group_id/files', cache(), function(req, res) {
  *
  * @apiParam {Number} [offset] First element to return in the collection.
  * @apiParam {Number} [limit=500] Maximum number of elements to return.
- * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the begining to ascending or descending order.
+ * @apiParam {String} [sort] Sorts the collection by a field or fields (separated by comma). Use +/- at the beginning to ascending or descending order.
  *
  * @apiDescription Returns the list of outdated groups.
  *
@@ -854,13 +860,42 @@ router.put('/:agent_id/group/:group_id', function(req, res) {
 
 
 /**
+ * @api {delete} /agents/groups Delete a list of groups
+ * @apiName DeleteAgentsGroups
+ * @apiGroup Delete
+ *
+ * @apiParam {String[]} ids Array of group ID's.
+ *
+ * @apiDescription Removes a list of groups. 
+ *
+ * @apiExample {curl} Example usage:
+ *     curl -u foo:bar -k -X DELETE -H "Content-Type:application/json" -d '{"ids":["webserver","dmz"]}' "https://127.0.0.1:55000/agents/groups?pretty"
+ *
+ */
+router.delete('/groups', function(req, res) {
+    logger.debug(req.connection.remoteAddress + " DELETE /agents/groups");
+
+    var data_request = {'function': 'DELETE/agents/groups', 'arguments': {}};
+
+    if (!filter.check(req.body, {'ids':'array_names'}, req, res))  // Filter with error
+        return;
+
+    if ('ids' in req.body){
+        data_request['arguments']['group_id'] = req.body.ids;
+        execute.exec(python_bin, [wazuh_control], data_request, function (data) { res_h.send(req, res, data); });
+    }else
+        res_h.bad_request(req, res, 604, "Missing field: 'ids'");
+})
+
+
+/**
  * @api {delete} /agents/:agent_id Delete an agent
  * @apiName DeleteAgentId
  * @apiGroup Delete
  *
  * @apiParam {Number} agent_id Agent ID.
  *
- * @apiDescription Removes an agent. You must restart OSSEC after removing an agent.
+ * @apiDescription Removes an agent.
  *
  * @apiExample {curl} Example usage:
  *     curl -u foo:bar -k -X DELETE "https://127.0.0.1:55000/agents/001?pretty"

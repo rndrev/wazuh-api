@@ -1,6 +1,21 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## [v3.0.0]
+
+### Added
+- Added a new class on the Python framework: `InputValidation`.
+- New request: Delete a list of groups - `DELETE /agents/groups - Params: {"ids":["id_1",...,"id_n"]}`
+- Input Validation at framework level of `group_id` parameter.
+
+### Fixed
+- When adding a new agent, now it checks that its name is different than manager's name.
+
+
+## [v2.1.1]
+### Fixed
+- Issue issue when deleting and restarting a list of agents
+- Issue with socket comunication in authd.
 
 ## [v2.1.0]
 ### Added

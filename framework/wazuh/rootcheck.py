@@ -161,19 +161,24 @@ def print_db(agent_id=None, status='all', pci=None, cis=None, offset=0, limit=co
     data = {'totalItems': conn.fetch()[0]}
 
     # Sorting
-
     if sort:
-        allowed_sort_fields = fields.keys()
-        for sf in sort['fields']:
-            if sf not in allowed_sort_fields:
-                raise WazuhException(1403, 'Allowed sort fields: {0}. Field: {1}'.format(allowed_sort_fields, sf))
-        query += ' ORDER BY ' + ','.join(['{0} {1}'.format(fields[i], sort['order']) for i in sort['fields']])
+        if sort['fields']:
+            allowed_sort_fields = fields.keys()
+            # Check if every element in sort['fields'] is in allowed_sort_fields
+            if not set(sort['fields']).issubset(allowed_sort_fields):
+                uncorrect_fields = map(lambda x: str(x), set(sort['fields']) - set(allowed_sort_fields))
+                raise WazuhException(1403, 'Allowed sort fields: {0}. Fields: {1}'.format(allowed_sort_fields, uncorrect_fields))
+                
+            query += ' ORDER BY ' + ','.join(['{0} {1}'.format(fields[i], sort['order']) for i in sort['fields']])
+        else:
+            query += ' ORDER BY date_last {0}'.format(sort['order'])
     else:
         query += ' ORDER BY date_last DESC'
 
-    query += ' LIMIT :offset,:limit'
-    request['offset'] = offset
-    request['limit'] = limit
+    if limit:
+        query += ' LIMIT :offset,:limit'
+        request['offset'] = offset
+        request['limit'] = limit
 
     select = ["status", "date_first", "date_last", "log", "pci_dss", "cis"]
 
@@ -238,17 +243,23 @@ def get_pci(agent_id=None, offset=0, limit=common.database_limit, sort=None, sea
 
     # Sorting
     if sort:
-        allowed_sort_fields = fields.keys()
-        for sf in sort['fields']:
-            if sf not in allowed_sort_fields:
-                raise WazuhException(1403, 'Allowed sort fields: {0}. Field: {1}'.format(allowed_sort_fields, sf))
-        query += ' ORDER BY pci_dss ' + sort['order']
+        if sort['fields']:
+            allowed_sort_fields = fields.keys()
+            # Check if every element in sort['fields'] is in allowed_sort_fields
+            if not set(sort['fields']).issubset(allowed_sort_fields):
+                uncorrect_fields = map(lambda x: str(x), set(sort['fields']) - set(allowed_sort_fields))
+                raise WazuhException(1403, 'Allowed sort fields: {0}. Fields: {1}'.format(allowed_sort_fields, uncorrect_fields))
+
+            query += ' ORDER BY pci_dss ' + sort['order']
+        else:
+            query += ' ORDER BY pci_dss {0}'.format(sort['order'])
     else:
         query += ' ORDER BY pci_dss ASC'
 
-    query += ' LIMIT :offset,:limit'
-    request['offset'] = offset
-    request['limit'] = limit
+    if limit:
+        query += ' LIMIT :offset,:limit'
+        request['offset'] = offset
+        request['limit'] = limit
 
 
     conn.execute(query.format('DISTINCT pci_dss'), request)
@@ -297,17 +308,23 @@ def get_cis(agent_id=None, offset=0, limit=common.database_limit, sort=None, sea
 
     # Sorting
     if sort:
-        allowed_sort_fields = fields.keys()
-        for sf in sort['fields']:
-            if sf not in allowed_sort_fields:
-                raise WazuhException(1403, 'Allowed sort fields: {0}. Field: {1}'.format(allowed_sort_fields, sf))
-        query += ' ORDER BY cis ' + sort['order']
+        if sort['fields']:
+            allowed_sort_fields = fields.keys()
+            # Check if every element in sort['fields'] is in allowed_sort_fields
+            if not set(sort['fields']).issubset(allowed_sort_fields):
+                uncorrect_fields = map(lambda x: str(x), set(sort['fields']) - set(allowed_sort_fields))
+                raise WazuhException(1403, 'Allowed sort fields: {0}. Fields: {1}'.format(allowed_sort_fields, uncorrect_fields))
+
+            query += ' ORDER BY cis ' + sort['order']
+        else:
+            query += ' ORDER BY cis {0}'.format(sort['order'])
     else:
         query += ' ORDER BY cis ASC'
 
-    query += ' LIMIT :offset,:limit'
-    request['offset'] = offset
-    request['limit'] = limit
+    if limit:
+        query += ' LIMIT :offset,:limit'
+        request['offset'] = offset
+        request['limit'] = limit
 
 
     conn.execute(query.format('DISTINCT cis'), request)

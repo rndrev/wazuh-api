@@ -13,7 +13,7 @@ class WazuhException(Exception):
 	# < 1000: API
 
         # Wazuh: 0999 - 1099
-        999: 'Incompatilbe version of Python',
+        999: 'Incompatible version of Python',
         1000: 'Wazuh Internal Error',
         1001: 'Error importing module',
         1002: 'Error executing command',
@@ -85,6 +85,9 @@ class WazuhException(Exception):
         1719: 'Remote upgrade is not available for this agent version',
         1720: 'Agent disconnected',
         1721: 'Remote upgrade is not available for this agent OS version',
+        1722: 'Incorrect format for group_id. It can only have letters and numbers. Max length is 256',
+        1723: 'Hash algorithm not available',
+        1724: 'Not a valid select field',
 
         # Manager:
 
